@@ -160,6 +160,11 @@ export async function giteaList<T>(route: string, maxItems?: number): Promise<T[
       log.warn(`Gitea repository list reached maxRepos=${maxItems}; additional results may be omitted.`);
       return items.slice(0, maxItems);
     }
+    // Gitea issue comments may ignore page while returning all results with a
+    // total count. Do not append that same complete list up to the page budget.
+    const totalHeader = headers.get('x-total-count');
+    const total = totalHeader && /^\d+$/.test(totalHeader) ? Number(totalHeader) : undefined;
+    if (total !== undefined && Number.isSafeInteger(total) && items.length >= total) return items;
     const link = headers.get('link');
     const next = link?.match(/<([^>]+)>;\s*rel="?next"?/i)?.[1];
     if (link && !next) return items;

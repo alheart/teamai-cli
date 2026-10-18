@@ -166,6 +166,9 @@ function extractRepoUrlFromMrUrl(mrUrl: string): string {
   // GitLab: https://<host>/group[/subgroup]/repo/-/merge_requests/123
   const gitlabMatch = mrUrl.match(/^(https?:\/\/.+?\/.+\/[^/]+)\/-\/merge_requests\//);
   if (gitlabMatch) return `${gitlabMatch[1]}.git`;
+  if (process.env.GITEA_URL) {
+    try { return parseGiteaPrUrl(mrUrl).httpsUrl; } catch { /* Not the configured Gitea instance. */ }
+  }
   // Cannot reliably extract; return empty string so caller skips incremental update
   return '';
 }

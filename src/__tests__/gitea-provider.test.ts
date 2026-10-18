@@ -355,3 +355,18 @@ describe('anonymous self-hosted Gitea probe', () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 });
+
+
+describe('Gitea total-count pagination', () => {
+  it('stops when a non-paginated comment list reports its complete total', async () => {
+    fetchMock.mockResolvedValue(json([{ id: 5, body: 'comment' }], 200, { 'x-total-count': '1' }));
+    expect(await giteaList('/repos/org/repo/issues/1/comments')).toHaveLength(1);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+  it('continues across a server-clamped page until the declared total is reached', async () => {
+    fetchMock.mockResolvedValueOnce(json([{ id: 1 }], 200, { 'x-total-count': '2' }))
+      .mockResolvedValueOnce(json([{ id: 2 }], 200, { 'x-total-count': '2' }));
+    expect(await giteaList('/repos/org/repo/pulls')).toEqual([{ id: 1 }, { id: 2 }]);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+});
