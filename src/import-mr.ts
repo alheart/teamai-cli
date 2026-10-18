@@ -61,6 +61,7 @@ function extractMRLearningPrompt(mr: MRData): string {
 
   return `你是团队知识库管理员。从以下 MR 信息提炼一条有价值的团队 learning。
 【必须】用中文撰写，输出完整 Markdown 文档（含 YAML frontmatter）。
+Output only the Markdown document, without greetings, personal addresses, postscripts or offers to save it.
 
 frontmatter 字段（严格按此格式，不要加其他字段）：
 ---

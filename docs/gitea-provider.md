@@ -69,7 +69,7 @@ ordinary membership does not need permission to push directly to main.
 The 0.27 backport supports `teamai import --from-mr <instance>/org/repo/pulls/N`
 for PR metadata, paginated commits and a bounded diff. A diff over 50 KiB is marked
 incomplete. Required evidence failures stop import rather than yielding an empty
-diff. Review discussions require the newer main-line implementation. Gitea CI
+diff. Review discussions require the newer main-line implementation. Review generated learning drafts before sharing; successful generation does not prove the conclusions are supported by the source evidence. Gitea CI
 extraction/comment commands and Gitea Actions templates are outside this provider.
 
 Anonymous public repositories can be shallow-cloned and fetched. This does not

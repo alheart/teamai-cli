@@ -51,7 +51,7 @@ reports/learnings 分支写权限、PR 权限，不需要直接推送 main 的�
 
 0.27 回移版支持 `teamai import --from-mr <instance>/org/repo/pulls/N` 的 PR 元信息、分页
 commits 和有限大小的 diff；超过 50 KiB 会标注证据不完整，必需证据读取失败会终止导入。
-评审讨论读取需要较新的 main 实现。本期不支持 Gitea 的 CI 提取/评论命令或 Actions 模板。
+评审讨论读取需要较新的 main 实现。生成的 learning 草稿须经内容复核后再分享，生成成功不代表结论都有来源支持。本期不支持 Gitea 的 CI 提取/评论命令或 Actions 模板。
 
 公开仓库可匿名浅克隆和 fetch，这不等于匿名 init、成员注册或 push。`teamai doctor` 检查
 实例 URL 配置和 token 是否存在；token 是否有效须通过真实 API 请求确认。
