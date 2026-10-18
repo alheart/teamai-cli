@@ -370,3 +370,11 @@ describe('Gitea total-count pagination', () => {
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 });
+
+
+it('honors an explicit next link before a conflicting total count', async () => {
+  fetchMock.mockResolvedValueOnce(json([{ id: 1 }], 200, { 'x-total-count': '1', link: `<${instance}/api/v1/repos/org/repo/pulls?page=2>; rel="next"` }))
+    .mockResolvedValueOnce(json([]));
+  expect(await giteaList('/repos/org/repo/pulls')).toEqual([{ id: 1 }]);
+  expect(fetchMock).toHaveBeenCalledTimes(2);
+});
