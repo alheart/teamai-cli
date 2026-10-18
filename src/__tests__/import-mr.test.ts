@@ -54,6 +54,7 @@ vi.mock('node:readline/promises', () => ({
 
 import { importFromMR, parseLearningDraft } from '../import-mr.js';
 import { fetchGiteaMR } from '../providers/gitea/mr-fetch.js';
+import { fetchGitHubPR } from '../providers/github/mr-fetch.js';
 import { importCmd } from '../import.js';
 import { log, setSilent } from '../utils/logger.js';
 
@@ -233,5 +234,27 @@ describe('configured Gitea MR routing', () => {
     expect(fetchGiteaMR).toHaveBeenCalled();
     expect(vi.mocked(fetchGiteaMR).mock.calls[0][0]).toBe(url);
     expect(result.repoUrl).toBe(`${base}/${repo}.git`);
+  });
+});
+
+
+describe('rejected MR URL diagnostics', () => {
+  it('sanitizes a rejected URL echoed by a legacy provider parser', async () => {
+    const url = 'http://sentinel-user:sentinel-password@gitea.test:3000/org/github.com/pulls/1?token=sentinel-query#sentinel-fragment';
+    vi.mocked(fetchGitHubPR).mockRejectedValueOnce(new Error(`Invalid GitHub PR URL: ${url}`));
+    const error = await importFromMR({ url, learningsDirs: [], dryRun: true }).catch((e: unknown) => e);
+    expect(error).toBeInstanceOf(Error);
+    expect((error as Error).message).toContain('http://gitea.test:3000/org/github.com/pulls/1');
+    expect((error as Error).message).not.toMatch(/sentinel-/);
+  });
+
+  it.each([
+    ['http://sentinel-user:sentinel-password@gitea.test:3000/org/repo/pulls/1?token=sentinel-query#sentinel-fragment', 'http://gitea.test:3000/org/repo/pulls/1'],
+    ['sentinel-password invalid URL', '[invalid MR URL]'],
+  ])('omits credentials and parameters from a rejected URL error: %s', async (url, expected) => {
+    const error = await importFromMR({ url, learningsDirs: [], dryRun: true }).catch((e: unknown) => e);
+    expect(error).toBeInstanceOf(Error);
+    expect((error as Error).message).toContain(expected);
+    expect((error as Error).message).not.toMatch(/sentinel-/);
   });
 });
