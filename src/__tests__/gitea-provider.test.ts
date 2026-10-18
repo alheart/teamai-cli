@@ -5,8 +5,8 @@ import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { GiteaProvider } from '../providers/gitea/index.js';
 import { assertGiteaHttpUrl, giteaBaseUrl, parseGiteaPrUrl, parseGiteaRepoInput } from '../providers/gitea/repo-url.js';
-import { getGiteaToken, giteaCreateRepo, giteaGetSync, giteaGitHeader, giteaJson, giteaList, giteaPullCreate, giteaRepoClone, giteaWhoami, readGiteaText, redactGiteaOutput, writeGiteaNetrcToken } from '../providers/gitea/gitea-api.js';
-import { giteaListOrgRepos, giteaOrganizationExists } from '../providers/gitea/org.js';
+import { getGiteaToken, giteaGetSync, giteaGitHeader, giteaJson, giteaList, giteaPullCreate, giteaRepoClone, giteaWhoami, readGiteaText, redactGiteaOutput, writeGiteaNetrcToken } from '../providers/gitea/gitea-api.js';
+import { giteaOrganizationExists } from '../providers/gitea/org.js';
 import { fetchGiteaMR } from '../providers/gitea/mr-fetch.js';
 import { probeSelfHostedGitea } from '../providers/gitea/probe.js';
 import { detectProvider, detectProviderForInit, getDefaultProvider, getProvider } from '../providers/registry.js';
@@ -226,7 +226,7 @@ describe('Gitea REST and pagination', () => {
 describe('Gitea PR create and recovery', () => {
   it('creates a PR and independently requests valid and invalid reviewers', async () => {
     fetchMock.mockResolvedValueOnce(json(pull(), 201)).mockResolvedValueOnce(json({}, 201)).mockResolvedValueOnce(json({}, 422));
-    expect(await giteaPullCreate({ ...options, reviewers: ['alice', 'missing'] })).toBe(pull().html_url);
+    expect(await new GiteaProvider().createPullRequest({ ...options, reviewers: ['alice', 'missing'] })).toBe(pull().html_url);
     expect(JSON.parse(String(fetchMock.mock.calls[1][1]?.body))).toEqual({ reviewers: ['alice'] });
     expect(log.warn).toHaveBeenCalledWith(expect.stringContaining('missing'));
   });
@@ -263,7 +263,7 @@ describe('Gitea PR create and recovery', () => {
 describe('Gitea clone and organizations', () => {
   it('preserves an explicit SSH origin and port without attaching a PAT', () => {
     vi.mocked(spawnSync).mockReturnValue({ status: 0, stdout: '', stderr: '' } as never);
-    giteaRepoClone('ssh://git@gitea.test:2222/org/repo.git', '/test/clone');
+    new GiteaProvider().cloneRepo('ssh://git@gitea.test:2222/org/repo.git', '/test/clone');
     expect(spawnSync).toHaveBeenCalledWith('git', ['clone', 'ssh://git@gitea.test:2222/org/repo.git', '/test/clone'], expect.anything());
     expect(fetchMock).not.toHaveBeenCalled();
   });
@@ -296,12 +296,12 @@ describe('Gitea clone and organizations', () => {
   it('maps organization repository metadata and validates supplied clone URLs', async () => {
     fetchMock.mockResolvedValueOnce(json([{ name: 'repo', full_name: 'org/repo', clone_url: `${instance}/org/repo.git`, language: 'TypeScript', stars_count: 2 }]))
       .mockResolvedValueOnce(json([]));
-    expect(await giteaListOrgRepos('org')).toEqual([expect.objectContaining({ name: 'repo', fullName: 'org/repo', primaryLanguage: 'TypeScript', stars: 2 })]);
+    expect(await new GiteaProvider().listOrgRepos('org')).toEqual([expect.objectContaining({ name: 'repo', fullName: 'org/repo', primaryLanguage: 'TypeScript', stars: 2 })]);
   });
 
   it.each([['alice', '/user/repos'], ['org', '/orgs/org/repos']])('creates a private empty repo for %s', async (owner, endpoint) => {
     fetchMock.mockResolvedValueOnce(json({ login: 'alice' })).mockResolvedValueOnce(json({}, 201));
-    await giteaCreateRepo(owner, 'repo');
+    await new GiteaProvider().createRepo(owner, 'repo');
     expect(String(fetchMock.mock.calls[1][0])).toBe(`${instance}/api/v1${endpoint}`);
     expect(JSON.parse(String(fetchMock.mock.calls[1][1]?.body))).toEqual({ name: 'repo', private: true, auto_init: false });
   });
@@ -313,7 +313,7 @@ describe('Gitea PR evidence', () => {
       .mockResolvedValueOnce(json([{ sha: 'abc', commit: { message: 'Fix input\n\nDetails' } }]))
       .mockResolvedValueOnce(json([{ sha: 'def', commit: { message: 'Add regression' } }]))
       .mockResolvedValueOnce(json([])).mockResolvedValueOnce(new Response('你'.repeat(20000)));
-    const data = await fetchGiteaMR(`${instance}/org/repo/pulls/12`);
+    const data = await new GiteaProvider().fetchMergeRequest(`${instance}/org/repo/pulls/12`);
     expect(data.commits).toHaveLength(2);
     expect(data.author).toBe('alice');
     expect(data.diff).toContain('Diff truncated');
