@@ -100,7 +100,12 @@ teamai --version
 
 > Only one admin needs to do this — other members can skip to [Member Onboarding](#member-onboarding).
 
-Create an empty repository on GitHub, GitLab (gitlab.com or a self-hosted instance), GitCode (gitcode.com), CNB (cnb.cool), TGit, or any private/self-hosted Git service (suggested naming: `TeamAi-<team-name>`). For providers that support repository creation, you can also run `teamai init` and create a missing repo when prompted.
+Create an empty repository on GitHub, GitLab (gitlab.com or a self-hosted instance), GitCode (gitcode.com), Gitea (self-hosted), CNB (cnb.cool), TGit, or any private/self-hosted Git service (suggested naming: `TeamAi-<team-name>`). For providers that support repository creation, you can also run `teamai init` and create a missing repo when prompted.
+
+**Gitea (self-hosted).**
+
+Set `GITEA_URL` to the complete instance URL, then run init with a PAT (env `GITEA_TOKEN` or the hidden terminal prompt). Configure the team skeleton before protecting main. Gitea version probing follows GitLab probing; a compatible unknown host produces a configuration hint, not an automatic trusted instance. See the [Gitea guide](gitea-provider.md) for SSH, reviewer errors and migration from generic Git.
+
 
 > **CNB exception:** the `cnb login` token can create neither an organization (`group-manage:rw`) nor a repo (`group-resource:rw`), so `init` prints a web link to create them instead — `https://cnb.cool/new/groups` for a missing org, `https://cnb.cool/new/repos` for a repo — then you re-run. Use a `CNB_TOKEN` access token carrying those scopes to let the CLI create them directly.
 
@@ -114,7 +119,7 @@ teamai init https://git.example.com/yourgroup/yourrepo
 
 `TEAMAI_GITLAB_HOST=git.example.com` also works without `GITLAB_URL`: the API then goes to `https://git.example.com`. When both are set they must name the same host, otherwise teamai stops before sending the token.
 
-For an unknown host, `init` makes an anonymous GitLab sign-in page check with a three-second total timeout. If confirmed as GitLab, it stops before authentication, cloning, or writing configuration and asks you to set the instance URL and token, then retry. The check does not send tokens or follow redirects. If it cannot confirm GitLab, initialization continues with the generic `git` provider, which supports Git transport but cannot create repos or PRs/MRs automatically. Set `GITLAB_URL` explicitly for instances behind SSO, deployed under a subpath, or otherwise inaccessible to the check.
+For an unknown host, `init` makes an anonymous GitLab sign-in page check with a three-second total timeout. If confirmed as GitLab, it stops before authentication, cloning, or writing configuration and asks you to set the instance URL and token, then retry. The check does not send tokens or follow redirects. If GitLab is not confirmed, init makes a separate anonymous Gitea-compatible version check with a three-second budget and asks for GITEA_URL / GITEA_TOKEN when detected. Only when neither check identifies a compatible instance does initialization continue with the generic `git` provider, which supports Git transport but cannot create repos or PRs/MRs automatically. Set `GITLAB_URL` explicitly for instances behind SSO, deployed under a subpath, or otherwise inaccessible to the check.
 
 Members who only sync and never need the CLI to open merge requests can skip the token: see [plain Git with `--provider git`](#member-onboarding).
 

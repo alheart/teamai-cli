@@ -99,7 +99,12 @@ teamai --version
 
 > 只需一位管理员完成，其他成员跳到[成员接入](#成员接入)。
 
-在 GitHub、GitLab（gitlab.com 或自建实例）、GitCode（gitcode.com）、CNB（cnb.cool）、TGit，或任意私有/自建 Git 服务上创建一个空仓库（命名建议：`TeamAi-<团队名>`）。对于支持自动建仓的 provider，也可直接执行 `teamai init`，按提示创建尚不存在的仓库。
+在 GitHub、GitLab（gitlab.com 或自建实例）、GitCode（gitcode.com）、Gitea（自托管）、CNB（cnb.cool）、TGit，或任意私有/自建 Git 服务上创建一个空仓库（命名建议：`TeamAi-<团队名>`）。对于支持自动建仓的 provider，也可直接执行 `teamai init`，按提示创建尚不存在的仓库。
+
+**Gitea（自托管）。**
+
+先设置完整实例地址 `GITEA_URL`，再通过 `GITEA_TOKEN` 或隐藏终端提示提供 PAT。管理员应先准备团队骨架，再保护 main。GitLab 探测未命中后会探测 Gitea 版本接口；兼容的未知 host 只产生配置提示，不会自动变成可信实例。SSH、reviewer 错误及 generic Git 迁移见 [Gitea 指南](gitea-provider.zh-CN.md)。
+
 
 > **CNB 例外：** `cnb login` 令牌既不能建组织（`group-manage:rw`）也不能建仓库（`group-resource:rw`），`init` 会改为打印网页链接引导你创建后重新运行——组织不存在用 `https://cnb.cool/new/groups`，无权限建仓库用 `https://cnb.cool/new/repos`；如需 CLI 直接创建，请改用带这些权限的 `CNB_TOKEN` access token。
 
@@ -113,7 +118,7 @@ teamai init https://git.example.com/yourgroup/yourrepo
 
 也可以不设 `GITLAB_URL`，只设 `TEAMAI_GITLAB_HOST=git.example.com`：此时 API 指向 `https://git.example.com`。两者同时设置时必须是同一个 host，否则 teamai 会在发送 token 前停止。
 
-对于未知 host，`init` 会匿名检查 GitLab 登录页，总超时为三秒。确认是 GitLab 后，会在认证、克隆或写入配置前停止，提示设置实例地址和 token 后重试。探测不发送 token，也不跟随重定向。无法确认时，初始化继续使用通用 `git` provider；它支持 Git 传输，但不能自动建仓或创建 PR/MR。实例若由 SSO 遮蔽、部署在子路径下，或无法被探测访问，请显式设置 `GITLAB_URL`。
+对于未知 host，`init` 会匿名检查 GitLab 登录页，总超时为三秒。确认是 GitLab 后，会在认证、克隆或写入配置前停止，提示设置实例地址和 token 后重试。探测不发送 token，也不跟随重定向。GitLab 未确认时，会另外执行总预算三秒的匿名 Gitea 版本探测，命中则提示配置 GITEA_URL / GITEA_TOKEN。两者均未确认时才继续使用通用 `git` provider；它支持 Git 传输，但不能自动建仓或创建 PR/MR。实例若由 SSO 遮蔽、部署在子路径下，或无法被探测访问，请显式设置 `GITLAB_URL`。
 
 只同步资源、从不需要 CLI 创建 MR 的成员可以不配 token：见[成员接入](#成员接入)中的 `--provider git`。
 

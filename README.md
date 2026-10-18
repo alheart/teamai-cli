@@ -78,7 +78,7 @@ npm install -g teamai-cli
 
 ### Team admin / solo user
 
-Create a shared-experience repo on your git host (GitHub, GitLab, GitCode, CNB, TGit, or a private Git service), **grant write access to team members**, then run `teamai init https://github.com/your-org/your-repo`.
+Create a shared-experience repo on your git host (GitHub, GitLab, GitCode, Gitea, CNB, TGit, or a private Git service), **grant write access to team members**, then run `teamai init https://github.com/your-org/your-repo`.
 
 > **No team repo yet?** Start from a template pre-loaded with production-ready skills, rules, and review agents. Browse the [teamai-hub](https://github.com/teamai-hub) org, click **Fork**, then `teamai init` against your new repo.
 
